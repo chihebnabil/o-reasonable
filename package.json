@@ -1,6 +1,6 @@
 {
   "name": "o-reasonable",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "O-Reasonable is a lightweight reasoning agent designed to mimic logical planning and problem-solving capabilities using cost-effective OpenAI models. It generates step-by-step plans, executes them sequentially, and synthesizes a final answer, making it a practical tool for structured reasoning tasks.",
   "type": "module",
   "main": "./dist/index.cjs.js",
