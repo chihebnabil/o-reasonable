@@ -2,7 +2,7 @@
 
 A lightweight reasoning agent designed to mimic logical planning and problem-solving capabilities using cost-effective OpenAI models. It generates step-by-step plans, executes them sequentially, and synthesizes a final answer.
 
-[![asciicast](https://asciinema.org/a/8H04otVQPyPEqeFjQkhKGSIyb.svg)](https://asciinema.org/a/8H04otVQPyPEqeFjQkhKGSIyb)
+[![demo](./demo.gif)]
 
 ## Features
 
