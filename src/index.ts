@@ -150,7 +150,4 @@ async function runAgent(task: string, config: OReasonableConfig = {}) {
   await executeStepsSequentially(steps, finalQuestion, initialResponseId, config);
 }
 
-// 🧪 Try it out
-runAgent("What would be the environmental and economic impacts of converting all passenger vehicles to electric by 2035");
-
 export { runAgent, type OReasonableConfig, DEFAULT_MODEL };
