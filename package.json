@@ -1,0 +1,46 @@
+{
+  "name": "c",
+  "version": "0.0.1",
+  "description": "O-Reasonable is a lightweight reasoning agent designed to mimic logical planning and problem-solving capabilities using cost-effective OpenAI models. It generates step-by-step plans, executes them sequentially, and synthesizes a final answer, making it a practical tool for structured reasoning tasks.",
+  "type": "module",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.7.2",
+    "vite": "^6.3.1",
+    "vite-tsconfig-paths": "^5.1.4"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.1",
+    "openai": "^4.95.0",
+    "zod": "^3.24.3"
+  },
+  "keywords": [
+    "openai",
+    "reasoning",
+    "ai",
+    "planning",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chihebnabil/o-reasonable.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chihebnabil/o-reasonable/issues"
+  },
+  "homepage": "https://github.com/chihebnabil/o-reasonable#readme"
+}
