@@ -10,6 +10,13 @@ const DEFAULT_MODEL = "gpt-4o-mini";
 interface OReasonableConfig {
   model?: string;
   apiKey?: string;
+  enableLogs?: boolean;
+}
+
+interface AgentResult {
+  steps: string[];
+  finalQuestion: string;
+  finalAnswer: string;
 }
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -28,7 +35,7 @@ async function planSteps(task: string, config: OReasonableConfig = {}) {
     input: [
       {
         role: "system",
-        content: 
+        content:
           "You are a planning agent. Create 3-5 high-level steps to solve this task. " +
           "Output ONLY valid JSON in this format: { steps: [\"step 1\", \"step 2\", ...], finalQuestion: \"question to get final answer\" }"
       },
@@ -43,16 +50,16 @@ async function planSteps(task: string, config: OReasonableConfig = {}) {
 
   try {
     const parsed = StepsSchema.safeParse(JSON.parse(initial.output_text || "{}"));
-    
+
     if (!parsed.success) {
       console.error("❌ Invalid step structure", parsed.error);
       return { steps: [], finalQuestion: task, initialResponseId: initial.id };
     }
-    
-    return { 
-      steps: parsed.data.steps, 
+
+    return {
+      steps: parsed.data.steps,
       finalQuestion: parsed.data.finalQuestion,
-      initialResponseId: initial.id 
+      initialResponseId: initial.id
     };
   } catch (e) {
     console.error("❌ Error parsing response", e);
@@ -64,13 +71,18 @@ async function executeStepsSequentially(steps: string[], finalQuestion: string, 
   const model = config.model || DEFAULT_MODEL;
   let prevResponseId = initialResponseId;
   let context = "";
+  const stepResults: string[] = [];
 
-  console.log("📝 Executing Steps:");
-  
+  if (config.enableLogs) {
+    console.log("📝 Executing Steps:");
+  }
+
   // Execute each step
   for (const [index, step] of steps.entries()) {
-    console.log(`➡️ Step ${index + 1}: ${step}`);
-    
+    if (config.enableLogs) {
+      console.log(`➡️ Step ${index + 1}: ${step}`);
+    }
+
     const response = await openai.responses.create({
       model,
       previous_response_id: prevResponseId,
@@ -84,15 +96,19 @@ async function executeStepsSequentially(steps: string[], finalQuestion: string, 
     });
 
     const result = response.output_text?.trim() || "";
-    console.log(`🧠 Result: ${result}\n`);
+    if (config.enableLogs) {
+      console.log(`🧠 Result: ${result}\n`);
+    }
 
-    // Update context and response ID for next step
+    stepResults.push(result);
     context += `Step ${index + 1} result: ${result}\n`;
     prevResponseId = response.id;
   }
 
-  // Get final answer
-  console.log("🏁 Getting final answer...");
+  if (config.enableLogs) {
+    console.log("🏁 Getting final answer...");
+  }
+
   const finalResponse = await openai.responses.create({
     model,
     previous_response_id: prevResponseId,
@@ -110,20 +126,27 @@ async function executeStepsSequentially(steps: string[], finalQuestion: string, 
   });
 
   const finalAnswer = finalResponse.output_text?.trim() || "";
-  console.log("\n📊 FINAL ANSWER:");
-  console.log(finalAnswer);
+  if (config.enableLogs) {
+    console.log("\n📊 FINAL ANSWER:");
+    console.log(finalAnswer);
+  }
 
-  return finalAnswer;
+  return { stepResults, finalAnswer };
 }
 
-async function runAgent(task: string, config: OReasonableConfig = {}) {
-  console.log(`🧠 Task: ${task}`);
-  console.log(`🤖 Using model: ${config.model || DEFAULT_MODEL}`);
+async function runAgent(task: string, config: OReasonableConfig = {}): Promise<AgentResult> {
+  if (config.enableLogs) {
+    console.log(`🧠 Task: ${task}`);
+    console.log(`🤖 Using model: ${config.model || DEFAULT_MODEL}`);
+  }
 
   const { steps, finalQuestion, initialResponseId } = await planSteps(task, config);
-  
+
   if (!steps.length) {
-    console.log("⚠️ No steps were generated. Running direct query.");
+    if (config.enableLogs) {
+      console.log("⚠️ No steps were generated. Running direct query.");
+    }
+
     const directResponse = await openai.responses.create({
       model: config.model || DEFAULT_MODEL,
       input: [
@@ -137,17 +160,33 @@ async function runAgent(task: string, config: OReasonableConfig = {}) {
         }
       ]
     });
-    
-    console.log("📊 DIRECT ANSWER:");
-    console.log(directResponse.output_text?.trim() || "");
-    return;
+
+    const finalAnswer = directResponse.output_text?.trim() || "";
+    if (config.enableLogs) {
+      console.log("📊 DIRECT ANSWER:");
+      console.log(finalAnswer);
+    }
+
+    return {
+      steps: [],
+      finalQuestion: task,
+      finalAnswer
+    };
   }
 
-  console.log("📝 Planned Steps:");
-  steps.forEach((step, i) => console.log(`- Step ${i + 1}: ${step}`));
-  console.log(`- Final: ${finalQuestion}`);
+  if (config.enableLogs) {
+    console.log("📝 Planned Steps:");
+    steps.forEach((step, i) => console.log(`- Step ${i + 1}: ${step}`));
+    console.log(`- Final: ${finalQuestion}`);
+  }
 
-  await executeStepsSequentially(steps, finalQuestion, initialResponseId, config);
+  const { stepResults, finalAnswer } = await executeStepsSequentially(steps, finalQuestion, initialResponseId, config);
+
+  return {
+    steps: stepResults,
+    finalQuestion,
+    finalAnswer
+  };
 }
 
 export { runAgent, type OReasonableConfig, DEFAULT_MODEL };

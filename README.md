@@ -37,13 +37,19 @@ OPENAI_API_KEY=your-api-key-here
 ```typescript
 import { runAgent } from 'o-reasonable';
 
-// Basic usage with default model
-await runAgent("What would be the impact of implementing a four-day work week?");
+// Basic usage with default model (logs enabled by default)
+const result = await runAgent("What would be the impact of implementing a four-day work week?");
 
-// Using a custom model
-await runAgent("Analyze the pros and cons of remote work", {
-  model: "gpt-4o-mini"
+// Using a custom model with logs disabled
+const result = await runAgent("Analyze the pros and cons of remote work", {
+  model: "gpt-4o-mini",
+  enableLogs: false
 });
+
+// The result contains steps and final answer
+console.log(result.steps);         // Array of step results
+console.log(result.finalQuestion); // The final question asked
+console.log(result.finalAnswer);   // The final synthesized answer
 ```
 
 ## Configuration Options
@@ -52,8 +58,21 @@ The `runAgent` function accepts a configuration object with the following option
 
 ```typescript
 interface OReasonableConfig {
-  model?: string;    // OpenAI model to use (default: "gpt-4o-mini")
-  apiKey?: string;   // Optional API key override
+  model?: string;     // OpenAI model to use (default: "gpt-4o-mini")
+  apiKey?: string;    // Optional API key override
+  enableLogs?: boolean; // Enable/disable console logs (default: false)
+}
+```
+
+## Return Type
+
+The `runAgent` function returns a promise that resolves to an `AgentResult`:
+
+```typescript
+interface AgentResult {
+  steps: string[];      // Results from each reasoning step
+  finalQuestion: string; // The final question that was asked
+  finalAnswer: string;  // The synthesized final answer
 }
 ```
 
